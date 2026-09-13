@@ -6,6 +6,12 @@
    was found so a failure is diagnosable instead of mysterious. */
 
 export const AUTH_SNIPPET = `
+var onReddit=function(){return /(^|\\.)reddit\\.com$/i.test(location.hostname)};
+var requireReddit=function(){
+  if(onReddit())return true;
+  alert('reddata\\n\\nThis bookmark only runs on reddit.com.\\n\\nYou are on '+location.hostname+'. Open reddit.com, sign in, then click it there.');
+  return false;
+};
 var findToken=function(){
   var t=null;
   try{t=window.___r&&window.___r.user&&window.___r.user.session&&window.___r.user.session.accessToken}catch(e){}
@@ -14,6 +20,7 @@ var findToken=function(){
   return t;
 };
 var getAuth=async function(){
+  if(!onReddit())return null;
   var t=findToken();
   if(t)return{mode:'token',token:t};
   var r=await fetch('https://www.reddit.com/api/me.json',{credentials:'include'});

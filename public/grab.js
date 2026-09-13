@@ -13,6 +13,7 @@ let view = { where: "subscriber", items: [] };
 /* Runs on reddit.com, where the session lives. Reads only. */
 const BOOKMARKLET =
   `javascript:(async()=>{try{${AUTH_SNIPPET}` +
+  `if(!requireReddit())return;` +
   `var a=await getAuth();` +
   `if(!a){alert('reddata\\n\\nNo Reddit session found.\\n\\nOpen reddit.com, sign in, then click the bookmark there.');return}` +
   `var s=function(m){return new Promise(function(r){setTimeout(r,m)})};` +

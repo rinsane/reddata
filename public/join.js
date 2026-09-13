@@ -17,6 +17,7 @@ function buildBookmarklet() {
   const list = [...picked];
   const src =
     `javascript:(async()=>{try{${AUTH_SNIPPET}` +
+    `if(!requireReddit())return;` +
     `var L=${JSON.stringify(list)};` +
     `if(!L.length){alert('reddata: nothing selected.');return}` +
     `var a=await getAuth();` +

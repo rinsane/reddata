@@ -29,7 +29,13 @@ file you drop into the site. No key involved.
 2. Go to reddit.com, signed in, and click the bookmark. It saves `reddit-subs.json`.
 3. Drop that file back on `/grab`.
 
-Both bookmarklets look for a session two ways: the bearer token the web app keeps
+Both bookmarklets refuse to run anywhere but `reddit.com` and its subdomains. That
+is a safety guard, not just a convenience: token discovery scans the page for an
+`accessToken`, and on some other site that could match an unrelated service's
+token. The check is `/(^|\.)reddit\.com$/` against the hostname, so
+`reddit.com.example.com` does not pass.
+
+On reddit.com they look for a session two ways: the bearer token the web app keeps
 on the page, then `api/me.json` plus a modhash over your cookies. The alert says
 which mode ran (`token` or `cookie`), which is the first thing to check when
 something fails.
