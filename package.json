@@ -1,0 +1,11 @@
+{
+  "name": "reddata",
+  "private": true,
+  "description": "Personal Reddit profile and community data, in the browser.",
+  "scripts": {
+    "dev": "wrangler pages dev public --compatibility-date=2025-09-01"
+  },
+  "devDependencies": {
+    "wrangler": "^4.34.0"
+  }
+}

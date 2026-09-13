@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reddata</title>
+    <meta name="description" content="Your Reddit profile and joined communities, from your own app credentials." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <strong>Reddata</strong>
+          <p>Personal Reddit data, on your machine.</p>
+        </div>
+      </div>
+      <nav id="session" hidden>
+        <span id="who"></span>
+        <button type="button" id="signout">Sign out</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="gate" class="panel">
+        <h1>Connect your Reddit app</h1>
+        <p class="lede">
+          Reddit has no single API key. Create a <em>web app</em> on Reddit, then paste the client id and secret here. Credentials stay in this browser.
+        </p>
+        <ol class="steps">
+          <li>Open <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noreferrer">reddit.com/prefs/apps</a></li>
+          <li>Create app → type <strong>web app</strong></li>
+          <li>Set redirect uri to exactly: <code id="redirect-hint"></code></li>
+          <li>Copy the client id (under the app name) and the secret</li>
+        </ol>
+        <form id="connect">
+          <label>
+            Client ID
+            <input name="clientId" autocomplete="off" spellcheck="false" required />
+          </label>
+          <label>
+            Client secret
+            <input name="clientSecret" type="password" autocomplete="off" required />
+          </label>
+          <button type="submit">Authorize with Reddit</button>
+        </form>
+        <p id="gate-error" class="error" hidden></p>
+      </section>
+
+      <section id="app" hidden>
+        <div class="profile" id="profile">
+          <div class="skeleton"></div>
+        </div>
+        <div class="toolbar">
+          <label class="search">
+            <span class="sr-only">Filter communities</span>
+            <input id="filter" type="search" placeholder="Filter communities" />
+          </label>
+          <fieldset id="rel">
+            <legend class="sr-only">Relationship</legend>
+            <label><input type="radio" name="rel" value="subscriber" checked /> Joined</label>
+            <label><input type="radio" name="rel" value="moderator" /> Moderating</label>
+            <label><input type="radio" name="rel" value="contributor" /> Approved</label>
+          </fieldset>
+        </div>
+        <p id="status" class="status"></p>
+        <ul id="subs" class="subs"></ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>Calls go through a tiny Cloudflare Pages Function so the browser never talks to Reddit directly. Nothing is stored on a server.</p>
+    </footer>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
