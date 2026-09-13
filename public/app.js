@@ -233,6 +233,12 @@ $("connect").addEventListener("submit", (e) => {
   connect(String(fd.get("clientId")).trim(), String(fd.get("clientSecret")).trim());
 });
 
+/* Returning via back/forward restores from the bfcache, where the module never
+   re-runs, so clear again on that path too. */
+addEventListener("pageshow", (e) => {
+  if (e.persisted) $("connect").reset();
+});
+
 $("signout").addEventListener("click", signOut);
 $("filter").addEventListener("input", () => renderSubs(cache.items, $("filter").value));
 $("rel").addEventListener("change", (e) => {
@@ -248,7 +254,16 @@ function showError(err) {
 
 (async () => {
   const saved = store.read();
-  if (saved.clientId) $("connect").clientId.value = saved.clientId;
+
+  /* Start the form empty every load. Two things would otherwise refill it: we
+     used to prefill the id from storage, and browsers restore form values on a
+     soft reload regardless of autocomplete="off". Credentials still go to
+     storage on submit because the OAuth round trip needs them after the
+     redirect, but nothing types them back into the page. */
+  $("connect").reset();
+  $("connect").clientId.value = "";
+  $("connect").clientSecret.value = "";
+
   try {
     const redirected = await handleRedirect();
     if (redirected || saved.accessToken) await showApp();
