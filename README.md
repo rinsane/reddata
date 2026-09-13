@@ -12,6 +12,8 @@ Reddit does not give a single API key.
 4. Client ID is the string under the app name. Secret is labeled `secret`.
 5. After you authorize, Reddata reads `GET /api/v1/me` for your account id (`t2_…`) and `GET /subreddits/mine/subscriber` for joined communities.
 
+Credentials never leave the browser except as a same-origin POST to the token Function, which forwards them to Reddit and does not store them. The Reddit proxy only allows GET on `/api/v1/me` and `/subreddits/mine/{subscriber,moderator,contributor}`.
+
 ## Local
 
 ```bash

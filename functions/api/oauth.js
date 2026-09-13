@@ -1,7 +1,11 @@
+import { forbidden, json, sameOrigin } from "../_shared.js";
+
 const TOKEN_URL = "https://www.reddit.com/api/v1/access_token";
 const USER_AGENT = "web:reddata:0.1.0";
 
 export async function onRequestPost({ request }) {
+  if (!sameOrigin(request)) return forbidden();
+
   let payload;
   try {
     payload = await request.json();
@@ -11,20 +15,28 @@ export async function onRequestPost({ request }) {
 
   const clientId = String(payload.clientId || "").trim();
   const clientSecret = String(payload.clientSecret || "").trim();
-  if (!clientId || !clientSecret) {
-    return json({ error: "missing_credentials" }, 400);
+  if (!looksLikeId(clientId) || !looksLikeSecret(clientSecret)) {
+    return json({ error: "invalid_credentials" }, 400);
   }
 
+  const expectedRedirect = `${new URL(request.url).origin}/`;
   const grantType = payload.grantType === "refresh_token" ? "refresh_token" : "authorization_code";
   const body = new URLSearchParams({ grant_type: grantType });
 
   if (grantType === "refresh_token") {
-    if (!payload.refreshToken) return json({ error: "missing_refresh_token" }, 400);
-    body.set("refresh_token", payload.refreshToken);
+    const refreshToken = String(payload.refreshToken || "");
+    if (!refreshToken || refreshToken.length > 2048) {
+      return json({ error: "missing_refresh_token" }, 400);
+    }
+    body.set("refresh_token", refreshToken);
   } else {
-    if (!payload.code || !payload.redirectUri) return json({ error: "missing_code" }, 400);
-    body.set("code", payload.code);
-    body.set("redirect_uri", payload.redirectUri);
+    const code = String(payload.code || "");
+    const redirectUri = String(payload.redirectUri || "");
+    if (!code || code.length > 512 || redirectUri !== expectedRedirect) {
+      return json({ error: "invalid_oauth" }, 400);
+    }
+    body.set("code", code);
+    body.set("redirect_uri", redirectUri);
   }
 
   const basic = btoa(`${clientId}:${clientSecret}`);
@@ -38,15 +50,30 @@ export async function onRequestPost({ request }) {
     body,
   });
 
-  return new Response(await upstream.text(), {
-    status: upstream.status,
-    headers: { "Content-Type": "application/json" },
+  let data;
+  try {
+    data = await upstream.json();
+  } catch {
+    return json({ error: "upstream_invalid" }, 502);
+  }
+
+  if (!upstream.ok || data.error) {
+    return json({ error: "oauth_failed" }, upstream.status === 401 ? 401 : 400);
+  }
+
+  return json({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_in: data.expires_in,
+    token_type: data.token_type,
+    scope: data.scope,
   });
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+function looksLikeId(value) {
+  return /^[A-Za-z0-9_-]{10,64}$/.test(value);
+}
+
+function looksLikeSecret(value) {
+  return /^[A-Za-z0-9_-]{10,64}$/.test(value);
 }

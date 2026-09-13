@@ -1,5 +1,5 @@
 const STORAGE = "reddata.v1";
-const SCOPES = ["identity", "mysubreddits", "read", "history", "account"].join(" ");
+const SCOPES = "identity mysubreddits";
 
 const $ = (id) => document.getElementById(id);
 const redirectUri = () => `${location.origin}/`;
@@ -88,23 +88,32 @@ function persistTokens(prev, tokens) {
 }
 
 function avatarUrl(me) {
-  const icon = me.icon_img || me.snoovatar_img || "";
-  return icon.split("?")[0];
+  const icon = String(me.icon_img || me.snoovatar_img || "").split("?")[0];
+  try {
+    const url = new URL(icon);
+    if (url.protocol !== "https:") return "";
+    return url.href;
+  } catch {
+    return "";
+  }
 }
 
 function renderProfile(me) {
+  const name = escapeHtml(String(me.name || ""));
+  const id = escapeHtml(String(me.id || ""));
+  const src = avatarUrl(me);
   $("profile").innerHTML = `
-    <img alt="" src="${avatarUrl(me)}" width="72" height="72" />
+    ${src ? `<img alt="" src="${src}" width="72" height="72" />` : `<span class="mark" aria-hidden="true"></span>`}
     <div>
-      <h2>u/${me.name}</h2>
+      <h2>u/${name}</h2>
       <p class="meta">
-        <span>id <b>t2_${me.id}</b></span>
+        <span>id <b>t2_${id}</b></span>
         <span>karma <b>${fmtCount(me.total_karma ?? me.link_karma + me.comment_karma)}</b></span>
         <span>joined <b>${fmtDate(me.created_utc)}</b></span>
       </p>
     </div>
   `;
-  $("who").textContent = `u/${me.name}`;
+  $("who").textContent = `u/${me.name || ""}`;
 }
 
 function renderSubs(items, query) {
