@@ -89,7 +89,15 @@ $("bookmarklet").addEventListener("click", (e) => {
     return;
   }
   try {
-    names = sane(await decodeList(token));
+    const { names: raw, expiresAt } = await decodeList(token);
+    if (expiresAt && Date.now() / 1000 > expiresAt) {
+      $("empty").hidden = false;
+      $("empty").querySelector("h1").textContent = "This link has expired";
+      $("empty").querySelector(".lede").textContent =
+        `The sender set it to expire on ${new Date(expiresAt * 1000).toLocaleString()}. Ask them for a fresh one.`;
+      return;
+    }
+    names = sane(raw);
     if (!names.length) throw new Error("no valid subreddit names");
     names.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     names.forEach((n) => picked.add(n));

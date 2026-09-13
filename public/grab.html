@@ -42,6 +42,30 @@
       </section>
 
       <section id="app" hidden>
+        <section id="share-out" class="panel" hidden>
+          <div class="row between">
+            <h2>Share link</h2>
+            <button type="button" id="share-close" class="ghost" aria-label="Close">✕</button>
+          </div>
+          <p class="note" id="share-desc"></p>
+          <p class="row">
+            <label class="inline" for="expiry">Expires</label>
+            <select id="expiry">
+              <option value="3600">in 1 hour</option>
+              <option value="86400">in 24 hours</option>
+              <option value="604800" selected>in 7 days</option>
+              <option value="2592000">in 30 days</option>
+              <option value="0">never</option>
+            </select>
+          </p>
+          <textarea id="share-url" rows="3" readonly aria-label="Share link"></textarea>
+          <p class="row">
+            <button type="button" id="copy">Copy link</button>
+            <a class="btn" id="share-open" href="#" target="_blank" rel="noreferrer">Preview</a>
+            <span id="copied" class="note"></span>
+          </p>
+        </section>
+
         <dl class="stats">
           <div><dt>Communities</dt><dd id="s-count">—</dd></div>
           <div><dt>Combined members</dt><dd id="s-members">—</dd></div>
@@ -49,49 +73,63 @@
           <div><dt>Median size</dt><dd id="s-median">—</dd></div>
         </dl>
 
-        <div class="toolbar">
-          <label class="search">
-            <span class="sr-only">Filter communities</span>
-            <input id="filter" type="search" placeholder="Filter by name or description" />
-          </label>
-          <fieldset id="rel" class="segment">
-            <legend>Relationship</legend>
-            <label><input type="radio" name="rel" value="subscriber" checked /><span>Joined</span></label>
-            <label><input type="radio" name="rel" value="moderator" /><span>Moderating</span></label>
-            <label><input type="radio" name="rel" value="contributor" /><span>Approved</span></label>
-          </fieldset>
-        </div>
+        <div class="controls">
+          <div class="toolbar">
+            <label class="search">
+              <span class="sr-only">Filter communities</span>
+              <input id="filter" type="search" placeholder="Filter by name or description" />
+            </label>
+            <fieldset id="rel" class="segment">
+              <legend>Relationship</legend>
+              <label><input type="radio" name="rel" value="subscriber" checked /><span>Joined</span></label>
+              <label><input type="radio" name="rel" value="moderator" /><span>Moderating</span></label>
+              <label><input type="radio" name="rel" value="contributor" /><span>Approved</span></label>
+            </fieldset>
+          </div>
 
-        <div class="toolbar">
-          <fieldset id="sort" class="segment">
-            <legend>Sort</legend>
-            <label><input type="radio" name="sort" value="name" checked /><span>A–Z</span></label>
-            <label><input type="radio" name="sort" value="size" /><span>Largest</span></label>
-            <label><input type="radio" name="sort" value="age" /><span>Oldest</span></label>
-          </fieldset>
-          <label class="pick"><input type="checkbox" id="sfw" /> <span class="note">Hide mature</span></label>
-          <span class="spacer"></span>
-          <button type="button" id="share">Share link</button>
-          <button type="button" id="csv">CSV</button>
+          <div class="toolbar">
+            <fieldset id="sort" class="segment">
+              <legend>Sort</legend>
+              <label><input type="radio" name="sort" value="name" checked /><span>A–Z</span></label>
+              <label><input type="radio" name="sort" value="size" /><span>Largest</span></label>
+              <label><input type="radio" name="sort" value="age" /><span>Oldest</span></label>
+            </fieldset>
+            <fieldset id="mature" class="segment">
+              <legend>Mature</legend>
+              <label><input type="radio" name="mature" value="all" checked /><span>All</span></label>
+              <label><input type="radio" name="mature" value="hide" /><span>Hide 18+</span></label>
+              <label><input type="radio" name="mature" value="only" /><span>Only 18+</span></label>
+            </fieldset>
+            <fieldset id="view" class="segment">
+              <legend>Layout</legend>
+              <label><input type="radio" name="view" value="list" checked /><span>List</span></label>
+              <label><input type="radio" name="view" value="grid" /><span>Cards</span></label>
+            </fieldset>
+          </div>
+
+          <div class="range">
+            <div class="row between">
+              <span class="note">Members</span>
+              <span class="note" id="range-label">—</span>
+            </div>
+            <div class="sliders">
+              <label class="sr-only" for="min">Minimum members</label>
+              <input id="min" type="range" min="0" max="1000" value="0" step="1" />
+              <label class="sr-only" for="max">Maximum members</label>
+              <input id="max" type="range" min="0" max="1000" value="1000" step="1" />
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <span class="spacer"></span>
+            <button type="button" id="reset">Reset filters</button>
+            <button type="button" id="csv">CSV</button>
+            <button type="button" id="share">Share link</button>
+          </div>
         </div>
 
         <p id="status" class="status"></p>
         <ul id="subs" class="subs"></ul>
-      </section>
-
-      <section id="share-out" class="panel" hidden>
-        <h2>Share link</h2>
-        <p class="note">
-          The list rides in the part after the <code>#</code>, which browsers never send to a
-          server — so nothing is stored anywhere and there is nothing to expire. Whoever opens it
-          picks which communities to join. Copy the whole thing; some chat apps trim fragments.
-        </p>
-        <textarea id="share-url" rows="4" readonly aria-label="Share link"></textarea>
-        <p class="row">
-          <button type="button" id="copy">Copy link</button>
-          <a class="btn" id="share-open" href="#" target="_blank" rel="noreferrer">Preview</a>
-          <span id="copied" class="note"></span>
-        </p>
       </section>
 
       <p id="error" class="error" hidden></p>
