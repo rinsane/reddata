@@ -1,34 +1,94 @@
 # Reddata
 
-Personal Reddit profile and joined communities. You bring your own Reddit app credentials; nothing is stored on a server.
+See, filter, export and share the subreddits you have joined. Everything runs in
+your browser — no account, no server-side storage, nothing uploaded.
 
-## Reddit credentials
+Live: <https://reddata.pages.dev>
 
-Reddit does not give a single API key.
+## Why it works the way it does
 
-1. Sign in to Reddit and open [prefs/apps](https://www.reddit.com/prefs/apps).
-2. Create an app. Type: **web app**.
-3. Redirect URI must match the site origin exactly, including the trailing slash. Example: `https://reddata.pages.dev/`
-4. Client ID is the string under the app name. Secret is labeled `secret`.
-5. After you authorize, Reddata reads `GET /api/v1/me` for your account id (`t2_…`) and `GET /subreddits/mine/subscriber` for joined communities.
+Reddit closed self-service API keys in November 2025 under its Responsible
+Builder Policy. New OAuth clients now need manual approval, so a normal "log in
+with Reddit" button is not available to build against yet.
 
-Credentials never leave the browser except as a same-origin POST to the token Function, which forwards them to Reddit and does not store them. The Reddit proxy only allows GET on `/api/v1/me` and `/subreddits/mine/{subscriber,moderator,contributor}`.
+Reddata works around that with a bookmarklet. Only a `reddit.com` tab can read
+your Reddit session, so the reading happens there and the result comes back as a
+file you drop into the site. No key involved.
+
+## Pages
+
+| Path    | What it does |
+| ------- | ------------ |
+| `/`     | Landing. Also hides the OAuth form for anyone holding pre-cutoff credentials. |
+| `/grab` | Bookmarklet, plus the viewer: stats, filter, sort, mature toggle, CSV export, share link. |
+| `/join` | Opens a share link, lets you pick communities, and builds a bookmarklet that subscribes you. |
+
+## Using it
+
+1. Open `/grab` and drag **Grab my subs** to your bookmarks bar.
+2. Go to reddit.com, signed in, and click the bookmark. It saves `reddit-subs.json`.
+3. Drop that file back on `/grab`.
+
+Both bookmarklets look for a session two ways: the bearer token the web app keeps
+on the page, then `api/me.json` plus a modhash over your cookies. The alert says
+which mode ran (`token` or `cookie`), which is the first thing to check when
+something fails.
+
+### Sharing
+
+**Share link** encodes the currently visible list into the URL fragment — gzip,
+then base64url. A fragment is never sent to a server, so the list is not stored
+anywhere and there is nothing to expire. ~250 communities is about a 2.4 KB link.
+Copy the whole URL; some chat apps trim the `#`.
+
+### Joining
+
+`/join` reads the list, lets the recipient select, and bakes the selection into a
+bookmarklet that calls `/api/subscribe` in batches of 50 with a 2 second pause.
+
+This drives reddit.com outside the sanctioned API, which is against the letter of
+Reddit's terms and carries some account risk. `/join` says so on the page. Do not
+remove that warning. The bookmarklet only ever subscribes.
+
+Both bookmarklets need the modern reddit.com front end. old.reddit.com will report
+no session found.
+
+## OAuth path
+
+Kept for when API access is approved. `functions/api/oauth.js` exchanges codes and
+refresh tokens; `functions/api/reddit/[[path]].js` proxies a GET allowlist
+(`api/v1/me`, `subreddits/mine/{subscriber,moderator,contributor}`). Both reject
+cross-origin callers via `functions/_shared.js`. `public/_headers` carries the CSP.
+
+Today the form asks each visitor for their own client id and secret, which no new
+user can obtain. When approval lands, replace it with one server-side app: put the
+credentials in Pages environment variables and ship a single "Log in with Reddit"
+button, so no secret ever reaches a browser.
 
 ## Local
 
 ```bash
 npm install
-npm run dev
+npm run dev          # http://localhost:8788
 ```
 
-Add the printed origin (usually `http://127.0.0.1:8788/`) as a redirect URI on the Reddit app.
+## Deploy
 
-## Cloudflare Pages
+```bash
+npx wrangler pages deploy public --project-name=reddata --branch=main
+```
 
-1. Push this repo to GitHub.
-2. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git.
-3. Select `reddata`.
-4. Framework preset: None. Build command: empty. Output directory: `public`.
-5. After the first deploy, copy the `*.pages.dev` URL and add `https://<project>.pages.dev/` as the Reddit redirect URI.
+## Layout
 
-Account ID (for Wrangler or GitHub Actions): Dashboard → any account page; the 32-character id is in the right sidebar and in the URL.
+```
+public/
+  index.html  grab.html  join.html
+  app.js            OAuth flow for the landing page
+  grab.js           grab bookmarklet + viewer
+  join.js           join bookmarklet + picker
+  share.js          list <-> URL fragment
+  reddit-auth.js    session discovery shared by both bookmarklets
+  styles.css  favicon.svg  _headers
+functions/
+  _shared.js  api/oauth.js  api/reddit/[[path]].js
+```
