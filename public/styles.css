@@ -432,6 +432,15 @@ select {
 .pick-peek { font-size: 0.8rem; color: var(--muted); text-decoration: none; }
 .pick-peek:hover { color: var(--accent); }
 
+.meta-right {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  justify-self: end;
+  white-space: nowrap;
+}
+.subs.grid .meta-right { grid-row: 2; justify-self: start; }
+
 .tag {
   font-size: 0.68rem;
   color: var(--err);

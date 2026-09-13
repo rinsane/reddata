@@ -1,19 +1,16 @@
 import { encodeList } from "/share.js";
 import { AUTH_SNIPPET } from "/reddit-auth.js";
 import { fail, note } from "/toast.js";
+import {
+  fmt, short, cardHTML, filterItems, sortItems, stats, makeScale, wireDualSlider,
+} from "/catalog.js";
 
 const $ = (id) => document.getElementById(id);
 const WHERE = ["subscriber", "moderator", "contributor"];
-const STEPS = 1000;
-
-const nf = new Intl.NumberFormat();
-const fmt = (n) => nf.format(n ?? 0);
-const short = (n) =>
-  n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n);
 
 let data = {};
 let view = { where: "subscriber", items: [] };
-let bounds = { lo: 0, hi: 0 };
+let scale = makeScale([]);
 
 /* Runs on reddit.com, where the session lives. Reads only. */
 const BOOKMARKLET =
@@ -37,120 +34,50 @@ $("bookmarklet").addEventListener("click", (e) => {
   fail("Drag this to your bookmarks bar, then click it while you are on reddit.com. It cannot run from this page.");
 });
 
-function esc(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
+const slider = wireDualSlider(
+  { min: $("min"), max: $("max"), fill: $("dual-fill") },
+  () => render()
+);
 
-/* Member counts span single digits to hundreds of millions, so a linear slider
-   would spend its whole travel on the top few communities. Map logarithmically. */
-const toValue = (pos) => {
-  const { lo, hi } = bounds;
-  if (hi <= lo) return lo;
-  const a = Math.log1p(lo);
-  const b = Math.log1p(hi);
-  return Math.round(Math.expm1(a + ((b - a) * pos) / STEPS));
-};
-
-function sliderRange() {
-  const a = Number($("min").value);
-  const b = Number($("max").value);
-  return { min: toValue(a), max: toValue(b), wide: a === 0 && b === STEPS };
-}
-
-/* Thumbs must not cross, and the fill between them is drawn by hand because a
-   native range only paints one track. */
-function paintSliders(moved) {
-  const lo = Number($("min").value);
-  const hi = Number($("max").value);
-
-  if (lo > hi) {
-    if (moved === "max") $("min").value = hi;
-    else $("max").value = lo;
-  }
-
-  const a = Number($("min").value) / STEPS;
-  const b = Number($("max").value) / STEPS;
-  $("dual-fill").style.left = `${a * 100}%`;
-  $("dual-fill").style.width = `${(b - a) * 100}%`;
-
-  /* When both sit at the far right the max thumb would sit on top and the min
-     thumb could never be dragged back, so lift it above. */
-  $("min").style.zIndex = lo > STEPS - 40 ? "4" : "2";
-  $("max").style.zIndex = "3";
-}
-
-function stats(items) {
-  const sizes = items.map((s) => s.subscribers || 0).sort((a, b) => a - b);
-  $("s-count").textContent = fmt(items.length);
-  $("s-members").textContent = fmt(sizes.reduce((a, b) => a + b, 0));
-  $("s-nsfw").textContent = fmt(items.filter((s) => s.over18).length);
-  $("s-median").textContent = fmt(sizes.length ? sizes[Math.floor(sizes.length / 2)] : 0);
-}
-
-function visible() {
-  const q = $("filter").value.trim().toLowerCase();
-  const mature = document.querySelector('input[name="mature"]:checked').value;
-  const { min, max } = sliderRange();
-
-  return view.items.filter((s) => {
-    if (mature === "hide" && s.over18) return false;
-    if (mature === "only" && !s.over18) return false;
-    const n = s.subscribers || 0;
-    if (n < min || n > max) return false;
-    if (!q) return true;
-    return `${s.display_name} ${s.title || ""} ${s.public_description || ""}`
-      .toLowerCase()
-      .includes(q);
-  });
-}
-
-function sortBy(items) {
-  const how = document.querySelector('input[name="sort"]:checked').value;
-  const copy = [...items];
-  if (how === "size") return copy.sort((a, b) => (b.subscribers || 0) - (a.subscribers || 0));
-  if (how === "age") return copy.sort((a, b) => (a.created_utc || 0) - (b.created_utc || 0));
-  return copy.sort((a, b) =>
-    a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase())
+function shown() {
+  const { min, max } = slider.read(scale);
+  return sortItems(
+    filterItems(view.items, {
+      q: $("filter").value,
+      mature: document.querySelector('input[name="mature"]:checked').value,
+      min,
+      max,
+    }),
+    document.querySelector('input[name="sort"]:checked').value
   );
-}
-
-function card(s) {
-  const desc = esc((s.public_description || s.title || "").slice(0, 160));
-  const tag = s.over18 ? `<span class="tag">18+</span>` : "";
-  return `<li>
-    <a href="https://www.reddit.com/r/${encodeURIComponent(s.display_name)}/" target="_blank" rel="noreferrer">r/${esc(s.display_name)}</a>${tag}
-    <span class="count">${fmt(s.subscribers)}</span>
-    ${desc ? `<p>${desc}</p>` : ""}
-  </li>`;
 }
 
 function render() {
   const layout = document.querySelector('input[name="view"]:checked').value;
-  const shown = sortBy(visible());
+  const list = shown();
 
   $("subs").className = layout === "grid" ? "subs grid" : "subs";
-  $("subs").innerHTML = shown.map(card).join("");
+  $("subs").innerHTML = list.map((s) => cardHTML(s)).join("");
 
-  const { min, max, wide } = sliderRange();
+  const { wide, min, max } = slider.read(scale);
   $("range-label").textContent = wide ? "any size" : `${short(min)} – ${short(max)}`;
   $("status").textContent =
-    shown.length === view.items.length
-      ? `${fmt(shown.length)} communities`
-      : `${fmt(shown.length)} of ${fmt(view.items.length)} communities`;
+    list.length === view.items.length
+      ? `${fmt(list.length)} communities`
+      : `${fmt(list.length)} of ${fmt(view.items.length)} communities`;
 }
 
 function loadWhere(where) {
   view = { where, items: data[where] || [] };
-  const sizes = view.items.map((s) => s.subscribers || 0);
-  bounds = { lo: sizes.length ? Math.min(...sizes) : 0, hi: sizes.length ? Math.max(...sizes) : 0 };
-  $("min").value = 0;
-  $("max").value = STEPS;
-  paintSliders();
-  stats(view.items);
+  scale = makeScale(view.items);
+  slider.reset();
+
+  const t = stats(view.items);
+  $("s-count").textContent = fmt(t.count);
+  $("s-members").textContent = fmt(t.members);
+  $("s-nsfw").textContent = fmt(t.nsfw);
+  $("s-median").textContent = fmt(t.median);
+
   render();
 }
 
@@ -184,11 +111,7 @@ function toCsv() {
   for (const where of WHERE) {
     for (const s of data[where] || []) {
       rows.push([
-        where,
-        s.display_name,
-        s.title,
-        s.public_description,
-        s.subscribers,
+        where, s.display_name, s.title, s.public_description, s.subscribers,
         s.over18 ? "yes" : "no",
         s.created_utc ? new Date(s.created_utc * 1000).toISOString().slice(0, 10) : "",
         `https://www.reddit.com/r/${s.display_name}/`,
@@ -206,27 +129,33 @@ function download(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 
-/* Shares exactly what the filters currently show, nothing else. Runs entirely
-   here: no request is made, so links are free to make and cost the site nothing. */
+/* Shares exactly what the filters currently show. Runs entirely here: no request
+   is made, so links cost the site nothing however many you build. */
 async function buildShare() {
-  const names = sortBy(visible()).map((s) => s.display_name);
-  if (!names.length) {
+  const list = shown();
+  if (!list.length) {
     fail("Nothing to share — every community is filtered out.");
     return;
   }
   const ttl = Number($("expiry").value);
   const expiresAt = ttl ? Math.floor(Date.now() / 1000) + ttl : 0;
+  const detailed = $("detailed").checked;
 
   try {
-    const url = `${location.origin}/join#${await encodeList(names, expiresAt)}`;
+    const url = `${location.origin}/join#${await encodeList(list, { expiresAt, detailed })}`;
+    const kb = (url.length / 1024).toFixed(1);
     $("share-url").value = url;
     $("share-open").href = url;
     $("share-out").hidden = false;
     $("share-desc").textContent =
-      `Sharing the ${fmt(names.length)} communities shown right now — filters included. ` +
-      `The list rides after the #, which browsers never send to a server, so nothing is stored and no request is made. ` +
+      `Sharing the ${fmt(list.length)} communities shown right now — filters included. ` +
+      (detailed
+        ? `They get the same browser you see: stats, search, sort, cards, mature and member filters. `
+        : `Names only, so they get a plain picker without the stats and filters. `) +
+      `Link is ${kb} KB` +
+      (url.length > 8000 ? ` — long enough that some chat apps may trim it, so paste it somewhere that keeps the whole URL. ` : `. `) +
       (expiresAt
-        ? `The page refuses it after ${new Date(expiresAt * 1000).toLocaleString()}, though anyone who saved the link can still decode it offline.`
+        ? `The page refuses it after ${new Date(expiresAt * 1000).toLocaleString()}, though anyone who saved it can still decode it offline.`
         : `This link never expires.`);
     $("share-out").scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (err) {
@@ -234,10 +163,13 @@ async function buildShare() {
   }
 }
 
-$("share").addEventListener("click", buildShare);
-$("expiry").addEventListener("change", () => {
+const rebuild = () => {
   if (!$("share-out").hidden) buildShare();
-});
+};
+
+$("share").addEventListener("click", buildShare);
+$("expiry").addEventListener("change", rebuild);
+$("detailed").addEventListener("change", rebuild);
 $("share-close").addEventListener("click", () => ($("share-out").hidden = true));
 $("csv").addEventListener("click", () => download("reddata.csv", toCsv(), "text/csv"));
 
@@ -253,9 +185,7 @@ $("copy").addEventListener("click", async () => {
 
 $("reset").addEventListener("click", () => {
   $("filter").value = "";
-  $("min").value = 0;
-  $("max").value = STEPS;
-  paintSliders();
+  slider.reset();
   document.querySelector('input[name="mature"][value="all"]').checked = true;
   document.querySelector('input[name="sort"][value="name"]').checked = true;
   render();
@@ -269,14 +199,6 @@ $("filter").addEventListener("input", render);
 $("sort").addEventListener("change", render);
 $("mature").addEventListener("change", render);
 $("view").addEventListener("change", render);
-$("min").addEventListener("input", () => {
-  paintSliders("min");
-  render();
-});
-$("max").addEventListener("input", () => {
-  paintSliders("max");
-  render();
-});
 $("rel").addEventListener("change", (e) => {
   if (e.target.name === "rel") loadWhere(e.target.value);
 });

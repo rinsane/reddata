@@ -44,8 +44,23 @@ something fails.
 
 **Share link** encodes the currently visible list into the URL fragment — gzip,
 then base64url. A fragment is never sent to a server, so the list is not stored
-anywhere and there is nothing to expire. ~250 communities is about a 2.4 KB link.
-Copy the whole URL; some chat apps trim the `#`.
+anywhere and building a link makes no request at all.
+
+Two shapes, chosen by the **Include details** toggle:
+
+| | Carries | ~250 communities |
+| --- | --- | --- |
+| Detailed (default) | name, members, 18+, age, description | ~21 KB |
+| Compact | names only | ~2.4 KB |
+
+A detailed link gives the recipient the same viewer the sender has — stats,
+search, sort, cards, mature and member filters — because both pages render from
+`catalog.js`. A compact link hides the controls that need that data rather than
+showing dead inputs. Records are tab separated and names are comma separated, so
+a link decodes by looking for a tab; links sent before details existed still work.
+
+Copy the whole URL; some chat apps trim the `#`, and a detailed link is long
+enough that this matters.
 
 ### Joining
 
@@ -92,8 +107,10 @@ public/
   app.js            OAuth flow for the landing page
   grab.js           grab bookmarklet + viewer
   join.js           join bookmarklet + picker
+  catalog.js        filtering, sorting, stats, cards, dual slider (both pages)
   share.js          list <-> URL fragment
   reddit-auth.js    session discovery shared by both bookmarklets
+  toast.js          transient messages
   styles.css  favicon.svg  _headers
 functions/
   _shared.js  api/oauth.js  api/reddit/[[path]].js

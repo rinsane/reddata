@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Reddata · Join</title>
-    <meta name="description" content="Join a shared list of subreddits in one click." />
+    <meta name="description" content="Browse a shared list of subreddits and join the ones you want." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
@@ -34,8 +34,8 @@
         <div class="panel">
           <h1>Join <span id="count"></span> communities</h1>
           <p class="lede">
-            Someone shared their subreddit list. Pick what you want, drag the button to your
-            bookmarks bar, then click it on reddit.com.
+            Someone shared their subreddit list. Filter and browse it below, tick what you
+            want, then drag the button to your bookmarks bar and click it on reddit.com.
           </p>
 
           <div class="warn">
@@ -57,20 +57,61 @@
           <p class="note" id="meta"></p>
         </div>
 
-        <div class="toolbar">
-          <label class="search">
-            <span class="sr-only">Filter</span>
-            <input id="filter" type="search" placeholder="Filter communities" />
-          </label>
-          <span class="spacer"></span>
-          <button type="button" id="all">Select all</button>
-          <button type="button" id="none">Select none</button>
+        <dl class="stats" id="stats" hidden>
+          <div><dt>Communities</dt><dd id="s-count">—</dd></div>
+          <div><dt>Combined members</dt><dd id="s-members">—</dd></div>
+          <div><dt>Mature</dt><dd id="s-nsfw">—</dd></div>
+          <div><dt>Median size</dt><dd id="s-median">—</dd></div>
+        </dl>
+
+        <div class="controls">
+          <div class="toolbar">
+            <label class="search">
+              <span class="sr-only">Filter communities</span>
+              <input id="filter" type="search" placeholder="Filter by name or description" />
+            </label>
+            <span class="spacer"></span>
+            <button type="button" id="all">Select shown</button>
+            <button type="button" id="none">Select none</button>
+          </div>
+
+          <div class="toolbar rich">
+            <fieldset id="sort" class="segment">
+              <legend>Sort</legend>
+              <label><input type="radio" name="sort" value="name" checked /><span>A–Z</span></label>
+              <label><input type="radio" name="sort" value="size" /><span>Largest</span></label>
+              <label><input type="radio" name="sort" value="age" /><span>Oldest</span></label>
+            </fieldset>
+            <fieldset id="mature" class="segment">
+              <legend>Mature</legend>
+              <label><input type="radio" name="mature" value="all" checked /><span>All</span></label>
+              <label><input type="radio" name="mature" value="hide" /><span>Hide 18+</span></label>
+              <label><input type="radio" name="mature" value="only" /><span>Only 18+</span></label>
+            </fieldset>
+            <fieldset id="view" class="segment">
+              <legend>Layout</legend>
+              <label><input type="radio" name="view" value="list" checked /><span>List</span></label>
+              <label><input type="radio" name="view" value="grid" /><span>Cards</span></label>
+            </fieldset>
+          </div>
+
+          <div class="range rich">
+            <div class="row between">
+              <span class="note">Members</span>
+              <span class="note" id="range-label">—</span>
+            </div>
+            <div class="dual">
+              <span class="dual-track"></span>
+              <span class="dual-fill" id="dual-fill"></span>
+              <input id="min" type="range" min="0" max="1000" value="0" step="1" aria-label="Minimum members" />
+              <input id="max" type="range" min="0" max="1000" value="1000" step="1" aria-label="Maximum members" />
+            </div>
+          </div>
         </div>
 
         <p id="status" class="status"></p>
         <ul id="subs" class="subs"></ul>
       </section>
-
     </main>
 
     <footer>
