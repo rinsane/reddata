@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reddata · Join</title>
+    <meta name="description" content="Join a shared list of subreddits in one click." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <strong>Reddata</strong>
+          <p>Your Reddit data stays in this browser.</p>
+        </div>
+      </div>
+      <nav><a href="/grab">Grab your own</a></nav>
+    </header>
+
+    <main>
+      <section id="empty" class="panel" hidden>
+        <h1>Nothing shared here</h1>
+        <p class="lede">
+          This page needs a share link. Ask whoever sent it for the full URL —
+          the part after the <code>#</code> is the list itself, and it is easy to lose
+          when a link gets trimmed.
+        </p>
+        <p><a class="cta" href="/grab">Grab your own communities →</a></p>
+      </section>
+
+      <section id="app" hidden>
+        <section class="panel">
+          <h1>Join <span id="count"></span> communities</h1>
+          <p class="lede">
+            Someone shared their subreddit list with you. Pick the ones you want,
+            then drag the button to your bookmarks bar and click it on reddit.com.
+          </p>
+
+          <div class="warn">
+            <strong>Read this first.</strong>
+            <p>
+              This subscribes your account by driving reddit.com directly, because
+              Reddit closed self-service API keys in November 2025 and there is no
+              approved app behind this page. It is your account and your choice, but
+              it is outside Reddit's sanctioned API, so it is against the letter of
+              their terms and carries some risk to your account. It joins in batches
+              with a pause between each, and it only ever subscribes — it never posts,
+              votes, comments, or reads your messages.
+            </p>
+          </div>
+
+          <p>
+            <a id="bookmarklet" class="bmk" href="#">Join selected subs</a>
+            <span class="note">← drag me to the bookmarks bar</span>
+          </p>
+          <p class="note" id="size"></p>
+        </section>
+
+        <div class="toolbar">
+          <label class="search">
+            <span class="sr-only">Filter</span>
+            <input id="filter" type="search" placeholder="Filter" />
+          </label>
+          <button type="button" id="all">Select all</button>
+          <button type="button" id="none">Select none</button>
+        </div>
+        <p id="status" class="status"></p>
+        <ul id="subs" class="subs pick"></ul>
+      </section>
+
+      <p id="error" class="error" hidden></p>
+    </main>
+
+    <footer>
+      <p>The list travels in the link's fragment, which browsers never send to a server. Nothing here is stored or uploaded.</p>
+    </footer>
+    <script type="module" src="/join.js"></script>
+  </body>
+</html>

@@ -1,3 +1,5 @@
+import { encodeList } from "/share.js";
+
 const $ = (id) => document.getElementById(id);
 const WHERE = ["subscriber", "moderator", "contributor"];
 
@@ -150,4 +152,27 @@ drop.addEventListener("drop", (e) => {
   e.preventDefault();
   const file = e.dataTransfer?.files?.[0];
   if (file) readFile(file);
+});
+
+$("share").addEventListener("click", async () => {
+  const names = cache.items.map((s) => s.display_name);
+  if (!names.length) return fail("Nothing to share in this tab.");
+  try {
+    const url = `${location.origin}/join#${await encodeList(names)}`;
+    $("share-url").value = url;
+    $("share-out").hidden = false;
+    $("copied").textContent = `${names.length} communities · ${(url.length / 1024).toFixed(1)} KB link`;
+  } catch (err) {
+    fail(`Could not build a link: ${err.message}`);
+  }
+});
+
+$("copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("share-url").value);
+    $("copied").textContent = "copied";
+  } catch {
+    $("share-url").select();
+    $("copied").textContent = "press Cmd+C";
+  }
 });

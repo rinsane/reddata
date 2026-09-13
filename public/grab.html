@@ -61,6 +61,18 @@
             <label><input type="radio" name="rel" value="contributor" /> Approved</label>
           </fieldset>
           <button type="button" id="csv">Export CSV</button>
+          <button type="button" id="share">Create share link</button>
+        </div>
+        <div id="share-out" class="panel" hidden>
+          <h2>Share link</h2>
+          <p class="note">
+            The list lives in the part after the <code>#</code>, which browsers never send to a
+            server. Nothing is stored anywhere — so this link works until you stop sharing it, and
+            whoever opens it can pick which subs to join. Copy the <em>whole</em> thing; chat apps
+            sometimes trim fragments.
+          </p>
+          <textarea id="share-url" rows="4" readonly></textarea>
+          <p><button type="button" id="copy">Copy link</button> <span id="copied" class="note"></span></p>
         </div>
         <p id="status" class="status"></p>
         <ul id="subs" class="subs"></ul>
