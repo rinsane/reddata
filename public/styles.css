@@ -208,7 +208,14 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .row + .row { margin-top: 0.75rem; }
 
-input[type="search"], input[type="text"], input[type="password"] {
+/* input:not([type]) matters: a bare <input> defaults to text but the
+   [type="text"] selector never matches it, so it would render unstyled. */
+input[type="search"],
+input[type="text"],
+input[type="password"],
+input[type="url"],
+input[type="email"],
+input:not([type]) {
   font: inherit;
   font-size: 0.9rem;
   color: var(--ink);
