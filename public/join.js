@@ -1,15 +1,11 @@
 import { decodeList, sane } from "/share.js";
 import { AUTH_SNIPPET } from "/reddit-auth.js";
+import { fail } from "/toast.js";
 
 const $ = (id) => document.getElementById(id);
 
 let names = [];
 const picked = new Set();
-
-function fail(msg) {
-  $("error").hidden = false;
-  $("error").textContent = msg;
-}
 
 /* The selection is baked in: code running on reddit.com cannot read this page,
    so the names have to travel inside the bookmarklet itself. */

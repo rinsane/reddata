@@ -1,5 +1,6 @@
 import { encodeList } from "/share.js";
 import { AUTH_SNIPPET } from "/reddit-auth.js";
+import { fail, note } from "/toast.js";
 
 const $ = (id) => document.getElementById(id);
 const WHERE = ["subscriber", "moderator", "contributor"];
@@ -35,11 +36,6 @@ $("bookmarklet").addEventListener("click", (e) => {
   e.preventDefault();
   fail("Drag this to your bookmarks bar, then click it while you are on reddit.com. It cannot run from this page.");
 });
-
-function fail(msg) {
-  $("error").hidden = false;
-  $("error").textContent = msg;
-}
 
 function esc(str) {
   return String(str ?? "")
@@ -142,7 +138,6 @@ function accept(json) {
     throw new Error("no subscriber/moderator/contributor lists inside");
   }
   data = json;
-  $("error").hidden = true;
   $("intro").hidden = true;
   $("drop").hidden = true;
   $("app").hidden = false;
@@ -205,7 +200,6 @@ async function buildShare() {
     $("share-url").value = url;
     $("share-open").href = url;
     $("share-out").hidden = false;
-    $("copied").textContent = "";
     $("share-desc").textContent =
       `Sharing the ${fmt(names.length)} communities shown right now — filters included. ` +
       `The list rides after the #, which browsers never send to a server, so nothing is stored and no request is made. ` +
@@ -228,10 +222,10 @@ $("csv").addEventListener("click", () => download("reddata.csv", toCsv(), "text/
 $("copy").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText($("share-url").value);
-    $("copied").textContent = "copied";
+    note("Share link copied to clipboard");
   } catch {
     $("share-url").select();
-    $("copied").textContent = "press ⌘C";
+    note("Selected — press ⌘C to copy");
   }
 });
 

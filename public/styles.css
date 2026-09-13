@@ -118,6 +118,54 @@ main {
 }
 .error[hidden] { display: none; }
 
+/* toasts */
+.toasts {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(30rem, calc(100vw - 1.5rem));
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  background: #201e1a;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px #00000066;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  animation: toast-in 0.18s ease-out;
+}
+.toast p { margin: 0; padding: 0.7rem 0.9rem; font-size: 0.9rem; }
+.toast-error { border-color: #ff8b7a66; }
+.toast-error p { color: var(--err); }
+.toast-info p { color: var(--ink); }
+
+.toast-track { display: block; height: 2px; background: #ffffff12; }
+.toast-track span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  background: var(--accent);
+}
+.toast-error .toast-track span { background: var(--err); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-0.4rem); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
 /* ---- controls ---- */
 button, .btn {
   font: inherit;
