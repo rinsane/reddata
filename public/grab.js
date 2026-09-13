@@ -56,10 +56,31 @@ const toValue = (pos) => {
 };
 
 function sliderRange() {
-  let a = Number($("min").value);
-  let b = Number($("max").value);
-  if (a > b) [a, b] = [b, a];
+  const a = Number($("min").value);
+  const b = Number($("max").value);
   return { min: toValue(a), max: toValue(b), wide: a === 0 && b === STEPS };
+}
+
+/* Thumbs must not cross, and the fill between them is drawn by hand because a
+   native range only paints one track. */
+function paintSliders(moved) {
+  const lo = Number($("min").value);
+  const hi = Number($("max").value);
+
+  if (lo > hi) {
+    if (moved === "max") $("min").value = hi;
+    else $("max").value = lo;
+  }
+
+  const a = Number($("min").value) / STEPS;
+  const b = Number($("max").value) / STEPS;
+  $("dual-fill").style.left = `${a * 100}%`;
+  $("dual-fill").style.width = `${(b - a) * 100}%`;
+
+  /* When both sit at the far right the max thumb would sit on top and the min
+     thumb could never be dragged back, so lift it above. */
+  $("min").style.zIndex = lo > STEPS - 40 ? "4" : "2";
+  $("max").style.zIndex = "3";
 }
 
 function stats(items) {
@@ -128,6 +149,7 @@ function loadWhere(where) {
   bounds = { lo: sizes.length ? Math.min(...sizes) : 0, hi: sizes.length ? Math.max(...sizes) : 0 };
   $("min").value = 0;
   $("max").value = STEPS;
+  paintSliders();
   stats(view.items);
   render();
 }
@@ -233,6 +255,7 @@ $("reset").addEventListener("click", () => {
   $("filter").value = "";
   $("min").value = 0;
   $("max").value = STEPS;
+  paintSliders();
   document.querySelector('input[name="mature"][value="all"]').checked = true;
   document.querySelector('input[name="sort"][value="name"]').checked = true;
   render();
@@ -246,8 +269,14 @@ $("filter").addEventListener("input", render);
 $("sort").addEventListener("change", render);
 $("mature").addEventListener("change", render);
 $("view").addEventListener("change", render);
-$("min").addEventListener("input", render);
-$("max").addEventListener("input", render);
+$("min").addEventListener("input", () => {
+  paintSliders("min");
+  render();
+});
+$("max").addEventListener("input", () => {
+  paintSliders("max");
+  render();
+});
 $("rel").addEventListener("change", (e) => {
   if (e.target.name === "rel") loadWhere(e.target.value);
 });
