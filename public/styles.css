@@ -186,3 +186,54 @@ footer {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+
+/* Grab page */
+.bmk {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+  border-radius: 0.5rem;
+  cursor: grab;
+}
+.note { color: var(--muted); font-size: 0.85rem; }
+.muted { color: var(--muted); }
+.link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+.drop {
+  border: 1px dashed var(--line);
+  border-radius: 0.75rem;
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drop.over { border-color: var(--accent); background: #d4652f14; }
+.drop[hidden] { display: none; }
+.drop p { margin: 0.25rem 0; }
+
+.tag {
+  font-size: 0.7rem;
+  color: var(--err);
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  padding: 0 0.3em;
+  vertical-align: 0.1em;
+}
+
+.cta {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.6rem;
+  margin-top: 0.5rem;
+}
+.cta:hover { filter: brightness(1.1); }
+.rule { border: 0; border-top: 1px solid var(--line); margin: 2rem 0 1.5rem; }
+.panel h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }

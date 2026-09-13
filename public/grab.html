@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reddata · Grab</title>
+    <meta name="description" content="Pull your joined communities straight from a logged-in Reddit tab, without an API key." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <strong>Reddata</strong>
+          <p>Your Reddit data stays in this browser.</p>
+        </div>
+      </div>
+      <nav>
+        <a href="/">Use API key instead</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h1>Grab without an API key</h1>
+        <p class="lede">
+          Reddit closed self-service API keys in November 2025. Until yours is approved, you can
+          still read your own subscriptions from a tab you are already signed in to.
+        </p>
+
+        <ol class="steps">
+          <li>Drag this button to your bookmarks bar →&nbsp; <a id="bookmarklet" class="bmk" href="#">Grab my subs</a></li>
+          <li>Open <a href="https://www.reddit.com" target="_blank" rel="noreferrer">reddit.com</a> and make sure you are signed in</li>
+          <li>Click the bookmark. It saves <code>reddit-subs.json</code></li>
+          <li>Drop that file below</li>
+        </ol>
+
+        <p class="note">
+          The bookmark only runs on reddit.com, because only a reddit.com tab may read your Reddit
+          session. This page cannot do it for you — your browser blocks that, which is exactly what
+          stops any other site from reading your account. Nothing is uploaded anywhere.
+        </p>
+      </section>
+
+      <section id="drop" class="drop">
+        <p><strong>Drop <code>reddit-subs.json</code> here</strong></p>
+        <p class="muted">or <label class="link">choose a file<input id="file" type="file" accept="application/json,.json" hidden /></label></p>
+      </section>
+
+      <section id="app" hidden>
+        <div class="toolbar">
+          <label class="search">
+            <span class="sr-only">Filter communities</span>
+            <input id="filter" type="search" placeholder="Filter communities" />
+          </label>
+          <fieldset id="rel">
+            <legend class="sr-only">Relationship</legend>
+            <label><input type="radio" name="rel" value="subscriber" checked /> Joined</label>
+            <label><input type="radio" name="rel" value="moderator" /> Moderating</label>
+            <label><input type="radio" name="rel" value="contributor" /> Approved</label>
+          </fieldset>
+          <button type="button" id="csv">Export CSV</button>
+        </div>
+        <p id="status" class="status"></p>
+        <ul id="subs" class="subs"></ul>
+      </section>
+
+      <p id="error" class="error" hidden></p>
+    </main>
+
+    <footer>
+      <p>Everything here runs in your browser. No server, no upload, no storage.</p>
+    </footer>
+    <script type="module" src="/grab.js"></script>
+  </body>
+</html>
