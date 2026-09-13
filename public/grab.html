@@ -4,85 +4,101 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Reddata · Grab</title>
-    <meta name="description" content="Pull your joined communities straight from a logged-in Reddit tab, without an API key." />
+    <meta name="description" content="Pull your joined communities from a logged-in Reddit tab, without an API key." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="top">
-      <div class="brand">
-        <span class="mark" aria-hidden="true"></span>
+      <a class="brand" href="/">
+        <img class="mark" src="/favicon.svg" alt="" width="32" height="32" />
         <div>
           <strong>Reddata</strong>
-          <p>Your Reddit data stays in this browser.</p>
+          <p>Your Reddit data stays in this browser</p>
         </div>
-      </div>
-      <nav>
-        <a href="/">Use API key instead</a>
-      </nav>
+      </a>
+      <nav><a href="/">Home</a></nav>
     </header>
 
     <main>
-      <section class="panel">
-        <h1>Grab without an API key</h1>
+      <section id="intro" class="panel">
+        <h1>Grab your communities</h1>
         <p class="lede">
-          Reddit closed self-service API keys in November 2025. Until yours is approved, you can
-          still read your own subscriptions from a tab you are already signed in to.
+          Only a reddit.com tab can read your Reddit session, so the work happens there.
+          This page just gives you the button and reads the result.
         </p>
-
         <ol class="steps">
-          <li>Drag this button to your bookmarks bar →&nbsp; <a id="bookmarklet" class="bmk" href="#">Grab my subs</a></li>
-          <li>Open <a href="https://www.reddit.com" target="_blank" rel="noreferrer">reddit.com</a> and make sure you are signed in</li>
+          <li>Drag this to your bookmarks bar → <a id="bookmarklet" class="bmk" href="#">Grab my subs</a></li>
+          <li>Open <a href="https://www.reddit.com" target="_blank" rel="noreferrer">reddit.com</a>, signed in</li>
           <li>Click the bookmark. It saves <code>reddit-subs.json</code></li>
           <li>Drop that file below</li>
         </ol>
-
-        <p class="note">
-          The bookmark only runs on reddit.com, because only a reddit.com tab may read your Reddit
-          session. This page cannot do it for you — your browser blocks that, which is exactly what
-          stops any other site from reading your account. Nothing is uploaded anywhere.
-        </p>
+        <p class="note">Reads only — it never subscribes, posts, votes, or comments.</p>
       </section>
 
       <section id="drop" class="drop">
         <p><strong>Drop <code>reddit-subs.json</code> here</strong></p>
-        <p class="muted">or <label class="link">choose a file<input id="file" type="file" accept="application/json,.json" hidden /></label></p>
+        <p class="note">or <label class="link">choose a file<input id="file" type="file" accept="application/json,.json" hidden /></label></p>
       </section>
 
       <section id="app" hidden>
+        <dl class="stats">
+          <div><dt>Communities</dt><dd id="s-count">—</dd></div>
+          <div><dt>Combined members</dt><dd id="s-members">—</dd></div>
+          <div><dt>Mature</dt><dd id="s-nsfw">—</dd></div>
+          <div><dt>Median size</dt><dd id="s-median">—</dd></div>
+        </dl>
+
         <div class="toolbar">
           <label class="search">
             <span class="sr-only">Filter communities</span>
-            <input id="filter" type="search" placeholder="Filter communities" />
+            <input id="filter" type="search" placeholder="Filter by name or description" />
           </label>
-          <fieldset id="rel">
-            <legend class="sr-only">Relationship</legend>
-            <label><input type="radio" name="rel" value="subscriber" checked /> Joined</label>
-            <label><input type="radio" name="rel" value="moderator" /> Moderating</label>
-            <label><input type="radio" name="rel" value="contributor" /> Approved</label>
+          <fieldset id="rel" class="segment">
+            <legend>Relationship</legend>
+            <label><input type="radio" name="rel" value="subscriber" checked /><span>Joined</span></label>
+            <label><input type="radio" name="rel" value="moderator" /><span>Moderating</span></label>
+            <label><input type="radio" name="rel" value="contributor" /><span>Approved</span></label>
           </fieldset>
-          <button type="button" id="csv">Export CSV</button>
-          <button type="button" id="share">Create share link</button>
         </div>
-        <div id="share-out" class="panel" hidden>
-          <h2>Share link</h2>
-          <p class="note">
-            The list lives in the part after the <code>#</code>, which browsers never send to a
-            server. Nothing is stored anywhere — so this link works until you stop sharing it, and
-            whoever opens it can pick which subs to join. Copy the <em>whole</em> thing; chat apps
-            sometimes trim fragments.
-          </p>
-          <textarea id="share-url" rows="4" readonly></textarea>
-          <p><button type="button" id="copy">Copy link</button> <span id="copied" class="note"></span></p>
+
+        <div class="toolbar">
+          <fieldset id="sort" class="segment">
+            <legend>Sort</legend>
+            <label><input type="radio" name="sort" value="name" checked /><span>A–Z</span></label>
+            <label><input type="radio" name="sort" value="size" /><span>Largest</span></label>
+            <label><input type="radio" name="sort" value="age" /><span>Oldest</span></label>
+          </fieldset>
+          <label class="pick"><input type="checkbox" id="sfw" /> <span class="note">Hide mature</span></label>
+          <span class="spacer"></span>
+          <button type="button" id="share">Share link</button>
+          <button type="button" id="csv">CSV</button>
         </div>
+
         <p id="status" class="status"></p>
         <ul id="subs" class="subs"></ul>
+      </section>
+
+      <section id="share-out" class="panel" hidden>
+        <h2>Share link</h2>
+        <p class="note">
+          The list rides in the part after the <code>#</code>, which browsers never send to a
+          server — so nothing is stored anywhere and there is nothing to expire. Whoever opens it
+          picks which communities to join. Copy the whole thing; some chat apps trim fragments.
+        </p>
+        <textarea id="share-url" rows="4" readonly aria-label="Share link"></textarea>
+        <p class="row">
+          <button type="button" id="copy">Copy link</button>
+          <a class="btn" id="share-open" href="#" target="_blank" rel="noreferrer">Preview</a>
+          <span id="copied" class="note"></span>
+        </p>
       </section>
 
       <p id="error" class="error" hidden></p>
     </main>
 
     <footer>
-      <p>Everything here runs in your browser. No server, no upload, no storage.</p>
+      <p>Everything runs in your browser. Nothing is stored on a server.</p>
     </footer>
     <script type="module" src="/grab.js"></script>
   </body>
